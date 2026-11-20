@@ -3924,6 +3924,7 @@ function areaValue(p, id, lv){
     const hp = AIP.handPen[lv] === undefined ? 1 : AIP.handPen[lv], CARD_V = 1.6;
     const vals = cands.map(k => {
       const stk = areaState(k), full = !stk.open || stk.full, direct = full ? 0 : stk.idx + 1;   // 직접 갈 때 내야 하는 카드 수 (칸이 찼으면 직접 불가)
+      if (direct === 1) return null;   // 비어 있는 구역은 직접 가는 것과 카드 비용이 같아 모방은 금 4만 손해 → 이미 누가 들어간 구역(또는 찬 구역)만 복사 대상
       let ev;
       if (AREAS[k].eff[0].t === 'prop') {   // 건설은 직접 갈 때와 같은 계산
         const want = AREAS[k].eff[0].n; if (propSpots(p, s => !s.prop).size < want || buildTokens(p, want, true, areaCost(p, k)).n < want) return null;
@@ -6617,18 +6618,19 @@ function mapSVG(p, interactive){
   const conn = connectedSet(p);
   const pts = h => h.verts.map(v => v.map(n=>n.toFixed(1)).join(',')).join(' ');
   let defs = '', body = '';
+  const cuid = ++BOARD_SEQ;   // 화면에 지도가 여러 개(내 영지·한눈에 보기 등) 있어도 clipPath id가 겹치지 않게 지도마다 고유 번호를 붙임
   for (const h of Object.values(HEX)) {
     const tile = p.tiles[h.k], sp = spot(p, h.k);
     if (tile) {
-      defs += `<clipPath id="cl-${h.k.replace(',','-')}"><polygon points="${pts(h)}"/></clipPath>`;
+      defs += `<clipPath id="cl${cuid}-${h.k.replace(',','-')}"><polygon points="${pts(h)}"/></clipPath>`;
       const src = tile.type === 'special' ? TILE_IMG.special[tile.sp] : (tile.flipped ? TILE_IMG.back[tile.type] : TILE_IMG.front[tile.type]);
       const b = hexBox(h);
-      body += `<image href="${src}" x="${b.x-2}" y="${b.y-2}" width="${b.w+4}" height="${b.h+4}" preserveAspectRatio="none" clip-path="url(#cl-${h.k.replace(',','-')})"/>`;
+      body += `<image href="${src}" x="${b.x-2}" y="${b.y-2}" width="${b.w+4}" height="${b.h+4}" preserveAspectRatio="none" clip-path="url(#cl${cuid}-${h.k.replace(',','-')})"/>`;
       if (tile.flipped && tile.type === 'sea' && balOn('sea3')) {   // 밸런스 패치: 바다 타일 뒷면의 '2'를 '3'으로 덧그림
         const iw = b.w + 4, ih = b.h + 4, ix = b.x - 2, iy = b.y - 2, X = f => ix + iw * f / 180, Y = f => iy + ih * f / 204;
-        body += `<g clip-path="url(#cl-${h.k.replace(',','-')})"><rect x="${X(47)}" y="${Y(97)}" width="${iw * 31 / 180}" height="${ih * 45 / 204}" rx="4" fill="#efd0b8"/><text x="${X(62)}" y="${Y(135)}" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="${ih * 0.235}" fill="#4a2a2a">3</text></g>`;
+        body += `<g clip-path="url(#cl${cuid}-${h.k.replace(',','-')})"><rect x="${X(47)}" y="${Y(97)}" width="${iw * 31 / 180}" height="${ih * 45 / 204}" rx="4" fill="#efd0b8"/><text x="${X(62)}" y="${Y(135)}" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="${ih * 0.235}" fill="#4a2a2a">3</text></g>`;
       }
-      if (!tile.flipped) body += `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${HR*0.62}" class="tile-cap" style="fill:${p.color}" clip-path="url(#cl-${h.k.replace(',','-')})"/>`;
+      if (!tile.flipped) body += `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${HR*0.62}" class="tile-cap" style="fill:${p.color}" clip-path="url(#cl${cuid}-${h.k.replace(',','-')})"/>`;
       body += `<polygon points="${pts(h)}" class="tile-edge ${tile.flipped?'flipped':'front'}"/>`;
       if (!tile.flipped) body += `<text x="${h.x}" y="${h.y-HR*0.52}" class="cap-txt">앞면</text>`;
       else if (tile.type === 'special') body += `<g class="tag done"><rect x="${h.x-30}" y="${h.y+HR*0.45}" width="60" height="22" rx="11"/><text x="${h.x}" y="${h.y+HR*0.45+16}">발동</text></g>`;
