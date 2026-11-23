@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>보드게임 온라인 · 게임 선택</title>
+<script>try{var h=(location.hash||"").replace("#","").trim().toUpperCase();if(/^[A-HJ-NP-Z2-9]{5}$/.test(h))location.replace("sweetland.html#"+h);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14202b;--ink:#f3ece0;--mut:#a9b5bd}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:'Gowun Dodum',system-ui,sans-serif;color:var(--ink);background:radial-gradient(1200px 600px at 20% -10%,#2a4a5a 0,transparent 60%),radial-gradient(900px 500px at 100% 110%,#4a2f45 0,transparent 55%),var(--bg);display:flex;flex-direction:column;align-items:center;padding:36px 16px 48px}
+h1{margin:0;font-size:clamp(26px,5vw,40px);letter-spacing:.02em}
+.sub{margin:8px 0 28px;color:var(--mut);font-size:15px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;width:100%;max-width:820px}
+.g{position:relative;display:flex;flex-direction:column;gap:10px;min-height:250px;padding:22px 22px 20px;border-radius:20px;text-decoration:none;color:inherit;overflow:hidden;border:2px solid rgba(255,255,255,.14);transition:transform .15s,box-shadow .15s}
+.g:hover,.g:focus-visible{transform:translateY(-4px);box-shadow:0 14px 34px rgba(0,0,0,.4);outline:none}
+.g .ic{font-size:54px;line-height:1}
+.g h2{margin:0;font-size:26px}
+.g p{margin:0;color:inherit;opacity:.82;font-size:14.5px;line-height:1.5}
+.g .tags{margin-top:auto;display:flex;flex-wrap:wrap;gap:6px}
+.g .tags span{font-size:12.5px;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,.18)}
+.g .go{position:absolute;right:18px;top:18px;font-size:13px;font-weight:700;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,.9);color:#222}
+.sweet{background:linear-gradient(150deg,#ffb7cf,#ffd9a8);color:#4a1f33;border-color:#fff6}
+.ostia{background:linear-gradient(150deg,#12525a,#1d3552);color:#f6e7bd;border-color:#e3c46a88}
+.ostia h2{font-family:'Cinzel','Gowun Dodum',serif;letter-spacing:.08em}
+.soon{border-style:dashed;background:rgba(255,255,255,.04);color:var(--mut);align-items:center;justify-content:center;text-align:center}
+.soon .ic{opacity:.5}
+footer{margin-top:32px;color:var(--mut);font-size:12.5px}
+</style>
+</head>
+<body>
+<h1>🎲 보드게임 온라인</h1>
+<p class="sub">같이 하고 싶은 게임을 골라 주세요</p>
+<main class="grid">
+ <a class="g sweet" href="sweetland.html" aria-label="스위트랜드 시작">
+  <span class="go">플레이 ▶</span>
+  <span class="ic">🍰</span>
+  <h2>스위트랜드</h2>
+  <p>시민을 모으고 영지를 가꾸는 달콤한 영지 경영 보드게임.</p>
+  <div class="tags"><span>AI 대전</span><span>온라인</span></div>
+ </a>
+ <a class="g ostia" href="ostia.html" aria-label="오스티아 시작">
+  <span class="go">플레이 ▶</span>
+  <span class="ic">⚓</span>
+  <h2>OSTIA</h2>
+  <p>로마 항구 도시의 교역 · 건설 · 납품 게임. 마리너 · 상인 · 후원자 · 해적 확장 포함.</p>
+  <div class="tags"><span>AI 초급·중급·고급</span><span>확장 4종</span></div>
+ </a>
+ <div class="g soon" aria-hidden="true">
+  <span class="ic">➕</span>
+  <h2>다음 게임</h2>
+  <p>준비 중이에요</p>
+ </div>
+</main>
+<footer>© 보드게임 온라인 · 개인 제작</footer>
+</body>
+</html>
