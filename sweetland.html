@@ -49,6 +49,7 @@ b{font-weight:700}
 .cloud{display:grid; gap:8px}
 .cloud form{display:grid; gap:8px}
 .cloud input{padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--fg); font:inherit; min-width:0}
+.acctbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;font-size:14px}.acctbar small{opacity:.7}.acctbar .btn{padding:4px 10px;font-size:13px}
 .cloud-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
 .rec{display:grid; gap:6px; padding:10px; background:var(--sunk); border-radius:8px}
 .finalmap{margin:8px 0; border:1px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--sunk)}
@@ -3705,7 +3706,7 @@ async function cloudLogout(){
 function cloudPanel(){
   if (!NET.fb) return '';
   const u = cloudUser();
-  if (u) return `<div class="panel cloud"><div class="cloud-row"><div style="flex:1; min-width:0"><b>${esc(u.displayName || '로그인됨')}</b> <small>@${esc((u.email || '').split('@')[0])}</small><br><small>혼자 하는 게임이 자동 저장돼서 폰·컴퓨터 어디서든 로그인하면 이어할 수 있어요.</small></div></div><div class="cloud-row"><button class="btn" data-a="records">내 기록</button><button class="btn ghost" data-a="clogout">로그아웃</button></div></div>`;
+  if (u) return `<div class="acctbar"><b>${esc(u.displayName || '로그인됨')}</b><small>@${esc((u.email || '').split('@')[0])}</small><button class="btn" data-a="records">내 기록</button><button class="btn ghost" data-a="clogout">로그아웃</button></div>`;
   const su = AUTH.mode === 'signup';
   return `<div class="panel cloud"><div class="seg"><button type="button" class="segb ${su ? '' : 'on'}" data-a="authmode" data-v="login">로그인</button><button type="button" class="segb ${su ? 'on' : ''}" data-a="authmode" data-v="signup">회원가입</button></div>
     <form id="authform" autocomplete="on"><input id="aid" placeholder="아이디 (영문 소문자·숫자 3~16자)" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="16" value="${esc(AUTH.id)}">${su ? `<input id="anick" placeholder="닉네임 (12자 이내)" maxlength="12" autocomplete="nickname" value="${esc(AUTH.nick)}">` : ''}<input id="apw" type="password" placeholder="비밀번호 (4자 이상)" autocomplete="${su ? 'new-password' : 'current-password'}"><button class="btn primary" type="submit">${su ? '가입하고 시작' : '로그인'}</button></form>
@@ -5127,7 +5128,7 @@ function netAfterDb(db){
   setTimeout(() => roomCleanup(db), 3000);
   if (INVITE) inviteStart();
   NET.unsubLobby = db.collection('games').orderBy('created', 'desc').limit(30).onSnapshot(
-    snap => { NET.lobby = snap.docs.map(d => d.data()); if (!G || G.phase === 'setup' || NET.meta) render(); else chatSync(); },
+    snap => { NET.lobby = snap.docs.map(d => d.data()).filter(m => m.game !== 'ostia'); if (!G || G.phase === 'setup' || NET.meta) render(); else chatSync(); },
     e => { NET.err = '대기실 목록을 불러오지 못했습니다'; });
 }
 async function netInit(){
@@ -5737,14 +5738,15 @@ function renderSetup(){
   const online = SETUP.mode === 'online';
   $app().innerHTML = `
   <div class="setup">
-    ${/github\.io|localhost/.test(location.host) ? `<div style="margin:0 0 8px"><a class="btn ghost" href="./" title="게임 선택 화면으로">🏠 게임 선택</a></div>` : ''}
+    ${/github\.io|localhost/.test(location.host) ? `<div style="margin:0 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="btn ghost" href="./" title="메인 화면으로">🏠 메인 화면</a><select class="btn ghost" aria-label="게임 바꾸기" style="font:inherit" onchange="if(this.value)location.href=this.value"><option value="sweetland.html" selected>🍰 스위트랜드</option><option value="ostia.html">⚓ OSTIA</option></select></div>` : ''}
+    ${cloudUser() ? cloudPanel() : ''}
     <div class="setup-head">
       <img class="hero" src="img/hero.jpg" alt="스위트랜드 로고">
       <p class="lede">과자의 나라의 왕위 후보가 되어 5라운드 동안 영지를 가꾸세요. 혼자 AI와 하거나, 한 기기에서 돌아가며 하거나, 링크로 온라인 대전을 할 수 있습니다.</p>
       <p class="notice">⚠️ 이 게임은 개인 소장 보드게임을 즐기기 위한 비공식 팬 프로젝트입니다. 게임 자료·이미지·링크를 무단으로 공유하거나 배포하는 불법 공유는 금지되어 있습니다.</p>
     </div>
     ${!online && saved && saved.phase !== 'end' && saved.phase !== 'setup-aid' ? `<div class="resume"><div><b>저장된 게임</b> · ${saved.round}라운드 · ${saved.players.map(p=>esc(p.name)).join(', ')}</div><button class="btn primary" data-a="resume">이어하기</button></div>` : ''}
-    ${!online ? cloudPanel() : ''}
+    ${!online && !cloudUser() ? cloudPanel() : ''}
     <div class="seg modes"><button class="segb ${!online?'on':''}" data-a="mode" data-v="local">이 기기에서 (솔로·핫시트)</button><button class="segb ${online?'on':''}" data-a="mode" data-v="online">온라인</button></div>
     ${online ? onlineSetup() : ''}
     <div class="panel" ${online && !NET.db ? 'hidden' : ''}>

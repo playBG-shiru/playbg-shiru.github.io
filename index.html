@@ -65,14 +65,14 @@ footer{margin-top:32px;color:var(--mut);font-size:12.5px}
   <span class="ic">🍰</span>
   <h2>스위트랜드</h2>
   <p>시민을 모으고 영지를 가꾸는 달콤한 영지 경영 보드게임.</p>
-  <div class="tags" id="tg-sw"><span>AI 대전</span><span>온라인</span></div>
+  <div class="tags" id="tg-sw"><span data-k="r">이어하기</span><span>온라인</span></div>
  </a>
  <a class="g ostia" href="ostia.html" aria-label="오스티아 시작">
   <span class="go">플레이 ▶</span>
   <span class="ic">⚓</span>
   <h2>OSTIA</h2>
   <p>로마 항구 도시의 교역 · 건설 · 납품 게임. 마리너 · 상인 · 후원자 · 해적 확장 포함.</p>
-  <div class="tags" id="tg-os"><span>AI 초급·중급·고급</span><span>확장 4종</span></div>
+  <div class="tags" id="tg-os"><span data-k="r">이어하기</span><span>확장 4종</span><span>온라인</span></div>
  </a>
  <div class="g soon" aria-hidden="true">
   <span class="ic">➕</span>
@@ -93,25 +93,25 @@ function load(){ if(window.__FB_SDK__)return Promise.resolve(window.__FB_SDK__);
 function show(u){
  var a=$('acct'); a.innerHTML='';
  if(u&&!u.isAnonymous){ var n=document.createElement('span'); n.className='nm'; n.textContent='👤 '+(u.displayName||(u.email||'').split('@')[0]); var o=document.createElement('button'); o.type='button'; o.textContent='로그아웃'; o.onclick=out; a.appendChild(n); a.appendChild(o); $('note').style.display='none'; resume(u); lobby(u); }
- else { if(lun){lun();lun=null;} $('rooms').classList.remove('on'); var b=document.createElement('button'); b.type='button'; b.textContent='🔑 로그인'; b.onclick=function(){ $('mdl').classList.add('on'); $('fid').focus(); }; a.appendChild(b); $('note').style.display=''; ['tg-sw','tg-os'].forEach(function(i){ var r=$(i).querySelector('.rs'); if(r)r.remove(); }); } }
-function tag(id,t){ var el=$(id); if(el.querySelector('.rs'))return; var s=document.createElement('span'); s.className='rs'; s.textContent=t; el.insertBefore(s,el.firstChild); }
+ else { luns.forEach(function(x){try{x();}catch(e){}}); luns=[]; $('rooms').classList.remove('on'); var b=document.createElement('button'); b.type='button'; b.textContent='🔑 로그인'; b.onclick=function(){ $('mdl').classList.add('on'); $('fid').focus(); }; a.appendChild(b); $('note').style.display=''; ['tg-sw','tg-os'].forEach(function(i){ var r=$(i).querySelector('.rs'); if(r)r.classList.remove('rs'); }); } }
+function tag(id,t){ var r=$(id).querySelector('[data-k=r]'); if(r)r.classList.add('rs'); }
 function resume(u){ load().then(function(f){ var d=function(p){ return f.fs.getDoc(f.fs.doc(f.dbi,p)).then(function(x){return x.exists();}).catch(function(){return false;}); };
  d('users/'+u.uid+'/save/ostia').then(function(e){ if(e)tag('tg-os','이어하기'); });
  d('users/'+u.uid+'/save/current').then(function(e){ if(e)tag('tg-sw','이어하기'); }); }); }
 
-var lun=null;
-function lobby(u){ if(lun)return; load().then(function(f){ var fs=f.fs; lun=fs.onSnapshot(fs.query(fs.collection(f.dbi,'games'),fs.limit(60)),function(sn){
- var rows=[]; sn.docs.forEach(function(d){ var m=d.data(); if(!m||!m.code||m.status==='ended')return; var os=m.game==='ostia',seats=m.seats||[],mine=seats.some(function(s){return s&&s.token===u.uid;}),open=seats.some(function(s){return s&&s.type==='human'&&!s.token;});
-  if(m.status!=='lobby'&&!mine)return; if(m.status==='lobby'&&!mine&&!open)return;
-  rows.push({m:m,os:os,mine:mine}); });
- rows.sort(function(a,b){ return (b.mine-a.mine)||((b.m.created||0)-(a.m.created||0)); });
- var box=$('rl'); box.innerHTML=''; $('rooms').classList.toggle('on',rows.length>0);
- rows.forEach(function(r){ var m=r.m,div=document.createElement('div'); div.className='rm';
-  var names=(m.seats||[]).map(function(s){ return (s&&(s.name||(s.type==='ai'?'AI':'')))||'빈자리'; }).join(' · ');
-  div.innerHTML='<span class="gi">'+(r.os?'⚓':'🍰')+'</span><b></b><span class="pl"></span><span class="st'+(r.mine?' me':'')+'"></span><a></a>';
-  div.querySelector('b').textContent=m.code; div.querySelector('.pl').textContent=names;
-  div.querySelector('.st').textContent=r.mine?(m.status==='lobby'?'내 방 · 대기 중':'내 방 · 진행 중'):'대기 중';
-  var a=div.querySelector('a'); a.textContent=r.mine?'들어가기':'입장'; a.href=(r.os?'ostia.html#':'sweetland.html#')+m.code; box.appendChild(div); }); },function(){ }); }); }
+var luns=[];
+function lobby(u){ if(luns.length)return; load().then(function(f){ var fs=f.fs,pool={sw:[],os:[]};
+ function draw(){ var rows=[]; ['sw','os'].forEach(function(k){ pool[k].forEach(function(m){ if(!m||!m.code||m.status==='ended')return; var seats=m.seats||[],mine=seats.some(function(s){return s&&s.token===u.uid;}),open=seats.some(function(s){return s&&s.type==='human'&&!s.token;});
+   if(m.game==='ostia'&&k==='sw')return; if(m.status!=='lobby'&&!mine)return; if(m.status==='lobby'&&!mine&&!open)return; rows.push({m:m,os:k==='os',mine:mine}); }); });
+  rows.sort(function(a,b){ return (b.mine-a.mine)||((b.m.created||0)-(a.m.created||0)); });
+  var box=$('rl'); box.innerHTML=''; $('rooms').classList.toggle('on',rows.length>0);
+  rows.forEach(function(r){ var m=r.m,div=document.createElement('div'); div.className='rm';
+   var names=(m.seats||[]).map(function(s){ return (s&&(s.name||(s.type==='ai'?'AI':'')))||'빈자리'; }).join(' · ');
+   div.innerHTML='<span class="gi">'+(r.os?'⚓':'🍰')+'</span><b></b><span class="pl"></span><span class="st'+(r.mine?' me':'')+'"></span><a></a>';
+   div.querySelector('b').textContent=m.code; div.querySelector('.pl').textContent=names;
+   div.querySelector('.st').textContent=r.mine?(m.status==='lobby'?'내 방 · 대기 중':'내 방 · 진행 중'):'대기 중';
+   var a=div.querySelector('a'); a.textContent=r.mine?'들어가기':'입장'; a.href=(r.os?'ostia.html#':'sweetland.html#')+m.code; box.appendChild(div); }); }
+ [['sw','games'],['os','ostia_games']].forEach(function(c){ luns.push(fs.onSnapshot(fs.query(fs.collection(f.dbi,c[1]),fs.limit(60)),function(sn){ pool[c[0]]=sn.docs.map(function(d){return d.data();}); draw(); },function(){})); }); }); }
 function out(){ load().then(function(f){ return f.authM.signOut(f.auth); }); }
 function setMode(m){ mode=m; $('tin').classList.toggle('on',m==='in'); $('tup').classList.toggle('on',m==='up'); $('fnk').style.display=m==='up'?'':'none'; $('lok').textContent=m==='up'?'가입하기':'로그인'; $('fpw').autocomplete=m==='up'?'new-password':'current-password'; $('lm').textContent=''; }
 $('tin').onclick=function(){setMode('in')}; $('tup').onclick=function(){setMode('up')}; $('lx').onclick=function(){$('mdl').classList.remove('on')};
