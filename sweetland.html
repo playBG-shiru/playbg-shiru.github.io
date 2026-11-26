@@ -5738,8 +5738,7 @@ function renderSetup(){
   const online = SETUP.mode === 'online';
   $app().innerHTML = `
   <div class="setup">
-    ${/github\.io|localhost/.test(location.host) ? `<div style="margin:0 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="btn ghost" href="./" title="메인 화면으로">🏠 메인 화면</a><select class="btn ghost" aria-label="게임 바꾸기" style="font:inherit" onchange="if(this.value)location.href=this.value"><option value="sweetland.html" selected>🍰 스위트랜드</option><option value="ostia.html">⚓ OSTIA</option></select></div>` : ''}
-    ${cloudUser() ? cloudPanel() : ''}
+    ${/github\.io|localhost/.test(location.host) ? `<div style="margin:0 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="btn ghost" href="./" title="메인 화면으로" style="height:38px;box-sizing:border-box;padding:0 14px;font:inherit;line-height:1;display:inline-flex;align-items:center">🏠 메인 화면</a><select class="btn ghost" aria-label="게임 바꾸기" style="height:38px;box-sizing:border-box;padding:0 14px;font:inherit;line-height:1;display:inline-flex;align-items:center" onchange="if(this.value)location.href=this.value"><option value="sweetland.html" selected>🍰 스위트랜드</option><option value="ostia.html">⚓ OSTIA</option></select>${cloudUser() ? cloudPanel().replace('class="acctbar"', 'class="acctbar" style="margin-left:auto"') : ''}</div>` : (cloudUser() ? cloudPanel() : '')}
     <div class="setup-head">
       <img class="hero" src="img/hero.jpg" alt="스위트랜드 로고">
       <p class="lede">과자의 나라의 왕위 후보가 되어 5라운드 동안 영지를 가꾸세요. 혼자 AI와 하거나, 한 기기에서 돌아가며 하거나, 링크로 온라인 대전을 할 수 있습니다.</p>
