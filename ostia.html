@@ -756,7 +756,7 @@ function newPlayer(G,i,name,ai){
  const P={id:i,name,ai,color:COLORS[i],harbor:[[],[],[],[],[],[]],store:{permit:0,wood:0,wheat:0,stone:0,gold:0},
   main:[{id:0,node:'OST',moved:false}],nextCid:1,sb:0,db:0,tri:0,upg:{},amp:0,wild:0,exo:0,orders:[],honors:[],
   personal:null,pFlip:false,sup:[],supEnd:[],visited:{},hasDisc:{},tok:{wild:0,exo:0},
-  weapons:0,leg:0,treasure:0,dis:0,home:null,supp:null,pick:{},antUsed:[false,false,false,false],lqCubes:0,qCubes:0,hadAmp:0,wb:false,xb:0,xs:0,xman:0,xwoman:0,cityEnd:[],cqCubes:0,trajTile:null,trajPos:0};
+  weapons:0,leg:0,treasure:0,dis:0,home:null,supp:null,pick:{},antUsed:[false,false,false,false],lqCubes:0,qCubes:0,hadAmp:0,wb:false,xb:0,xs:0,xman:0,xwoman:0,cityEnd:[],cqCubes:0,trajTile:null,trajPos:0,fx:{}};
  for(let s=0;s<6;s++)P.harbor[s].push('C');
  if(!G.startDeck||!G.startDeck.length)G.startDeck=shuffle(G,START_CARDS.map(c=>c.slice()));
  P.startCard=G.startDeck.pop(); P.startCard.forEach(s=>P.harbor[s].push('C'));
@@ -794,7 +794,7 @@ function prodAmount(P,s){
  return n;
 }
 function tradeCost(P){return P.upg.trade?2:3;}
-function trade(G,P,r){ if(r==='gold'||!RES.includes(r))return false; const c=tradeCost(P); if(P.store.gold<c)return false; P.store.gold-=c; P.store[r]++; logm(G,P.name+': 교역 '+c+'🪙 → '+RI[r]); if(P.supp==='trajanus'&&P.trajTile&&P.trajPos<4){P.trajPos++; logm(G,P.name+': 트라야누스 큐브 '+P.trajPos+'/4');} return true; }
+function trade(G,P,r){ if(r==='gold'||!RES.includes(r))return false; const c=tradeCost(P); if(P.store.gold<c)return false; P.store.gold-=c; P.store[r]++; logm(G,P.name+': 교역 '+c+'🪙 → '+RI[r]); if(P.supp==='trajanus'&&P.trajTile&&P.trajPos<4){P.trajPos++; logm(G,P.name+': 트라야누스 큐브 '+P.trajPos+'/4'); if(P.trajPos===4&&P.trajTile.imm){ addTri(G,P,P.trajTile.imm[0]); logm(G,P.name+': 트라야누스 — 큐브 도착, 개선 +'+P.trajTile.imm[0]); }} return true; }
 function takeAmp(G,P,n){ P.amp+=n; G.ampSupply=Math.max(0,G.ampSupply-n); }
 
 /* ---------- 아이콘 집계 ---------- */
@@ -856,7 +856,7 @@ function sailStep(G,P,t,opt){
   logm(G,P.name+': '+NODES[opt.to].name+'의 '+(ri.color==='black'?'검은':'붉은')+' 해적선 격퇴 (무기 '+ri.pay+(P.leg?' · 군단병 '+Math.min(P.leg,ri.need)+' 기여':'')+')');
   takeChests(G,P,ri.color==='black'?1:2);
   if(P.supp==='cornelius'&&P.store.gold>=3)G.queue.unshift({type:'corn',p:P.id});
-  if(P.home==='misenum'&&ri.pay>0)G.queue.unshift({type:'resChoice',p:P.id,n:ri.pay,txt:'미세눔: 쓴 무기 '+ri.pay+'개 → 자원 '+ri.pay+'개 (한 종류)'});
+  if(P.home==='misenum'&&ri.pay>0)fxAdd(P,'n',ri.pay); if(P.home==='misenum'&&ri.pay>0)G.queue.unshift({type:'resChoice',p:P.id,n:ri.pay,txt:'미세눔: 쓴 무기 '+ri.pay+'개 → 자원 '+ri.pay+'개 (한 종류)'});
  }
  const edge=opt.from+'>'+opt.to, slots=G.disc.filter(s=>s.edge===edge&&s.tile);
  if(slots.length){
@@ -876,7 +876,7 @@ function finishSail(G,t){
  const P=G.players[t.p];
  for(const sh of P.main) if(sh.moved){
   sh.moved=false; const nd=NODES[sh.node];
-  if(nd.type==='transit'){ const tl=G.transit[sh.node],q=P.home==='petra'?4:2; P.store[tl.res]+=q; logm(G,P.name+': 환승 타일 — '+RI[tl.res]+'×'+q+(q===4?' (페트라 2배)':'')); }
+  if(nd.type==='transit'){ const tl=G.transit[sh.node],q=P.home==='petra'?4:2; P.store[tl.res]+=q; if(P.home==='petra')fxAdd(P,'n'); logm(G,P.name+': 환승 타일 — '+RI[tl.res]+'×'+q+(q===4?' (페트라 2배)':'')); }
   else if(nd.type==='dest') arriveDest(G,P,sh.node);
  }
  removeTask(G,t);
@@ -927,7 +927,7 @@ function doConstruct(G,P,t,node,slot){
   logm(G,P.name+': '+NODES[node].name+'에 건설 → 오스티아 시티 타일 획득'); applyCity(G,P,tile); }
  else { P.upg[slot]=true; logm(G,P.name+': '+NODES[node].name+'에 건설 → 업그레이드 「'+UPG[slot]+'」'); if(slot==='triumph')addTri(G,P,1); }
  if(d.tri)addTri(G,P,d.tri);
- if(P.home==='simitthus'&&first&&!YELLOW.includes(node))G.queue.unshift({type:'resChoice',p:P.id,n:4,txt:'시미투스: 첫 원판 보너스 — 자원 4개 (한 종류)'});
+ if(P.home==='simitthus'&&first&&!YELLOW.includes(node))fxAdd(P,'n'); if(P.home==='simitthus'&&first&&!YELLOW.includes(node))G.queue.unshift({type:'resChoice',p:P.id,n:4,txt:'시미투스: 첫 원판 보너스 — 자원 4개 (한 종류)'});
  portImm(G,P,port.tile);
  return true;
 }
@@ -960,7 +960,7 @@ function doDeliver(G,P,t,picks){
  const taken=[];
  for(const p of picks){
   const c=G.market[p.idx]; let a=1; if(c.bonus&&(p.bonus||t.free))a=2;
-  takeAmp(G,P,a); P.store[c.give.res]+=c.give.n+(P.home==='ephesus'?2:0); P.orders.push(c); taken.push(p.idx);
+  takeAmp(G,P,a); P.store[c.give.res]+=c.give.n+(P.home==='ephesus'?2:0); if(P.home==='ephesus')fxAdd(P,'n',2); P.orders.push(c); taken.push(p.idx);
   logm(G,P.name+': 납품 — 암포라 '+a+', '+RI[c.give.res]+'×'+c.give.n+', '+(c.noble==='man'?'귀족':c.noble==='both'?'귀족+귀부인':'귀부인'));
  }
  G.market=G.market.filter((c,i)=>!taken.includes(i)); refillMarket(G);
@@ -996,7 +996,7 @@ function buyHonor(G,P,id){
  P.store.gold-=4;
  if(h.pub){ G.honors=G.honors.filter(x=>x!==id); P.honors.push(id); logm(G,P.name+': 공개 명예 카드 구매 (+12VP)'); }
  else { P.pFlip=true; logm(G,P.name+': 개인 명예 카드 달성 (+15VP)'); }
- if(P.supp==='tacitus')redeem(G,P);
+ if(P.supp==='tacitus'){ fxAdd(P,'s'); redeem(G,P); }
  return true;
 }
 
@@ -1012,13 +1012,14 @@ function mkAct(p,type){
  }
 }
 function startTurn(G){ G.turn={stage:'select'}; }
+function fxAdd(P,k,n){ (P.fx=P.fx||{}); P.fx[k]=(P.fx[k]||0)+(n==null?1:n); }
 function hlRec(G,P,k,v){ if(P.ai)return; (G.hl=G.hl||{}); (G.hl[P.id]=G.hl[P.id]||{sel:[],adm:[]})[k].push(v); }
 function selectSeg(G,P,s){
  if(!P.harbor[s].length)return false;
  if(!P.ai)hlRec(G,P,'sel',SEGS[(s+P.harbor[s].length)%6].act);
- const n=prodAmount(P,s); if(SEGS[s].res){ P.store[SEGS[s].res]+=n; logm(G,P.name+': '+SEGS[s].name+' 구역 선택 — '+RI[SEGS[s].res]+'×'+n+' 생산'); }
+ const n=prodAmount(P,s); if(P.home==='puteoli'&&SEGS[s].res){ const hm=P.home; P.home=null; const n0=prodAmount(P,s); P.home=hm; if(n>n0)fxAdd(P,'n'); } if(SEGS[s].res){ P.store[SEGS[s].res]+=n; logm(G,P.name+': '+SEGS[s].name+' 구역 선택 — '+RI[SEGS[s].res]+'×'+n+' 생산'); }
  else logm(G,P.name+': 행정 구역 선택');
- if(P.supp==='acilius'&&P.harbor[s].length>=6){ if(P.dis>0){P.dis--; logm(G,P.name+': 아킬리우스 — 불명예 해소');} else { addTri(G,P,2); P.amp++; logm(G,P.name+': 아킬리우스 — 개선 2 + 암포라 1'); } }
+ if(P.supp==='acilius'&&P.harbor[s].length>=6){ fxAdd(P,'s'); if(P.dis>0){P.dis--; logm(G,P.name+': 아킬리우스 — 불명예 해소');} else { addTri(G,P,2); P.amp++; logm(G,P.name+': 아킬리우스 — 개선 2 + 암포라 1'); } }
  G.turn={stage:'act',seg:s};
  G.queue.push({type:'drop',p:P.id,src:s});
  return true;
@@ -1034,9 +1035,9 @@ function dropShips(G,P,t,order){
  return true;
 }
 function startAct(G,t){ const i=G.queue.indexOf(t),type=SEGS[t.seg].act,P=G.players[t.p];
- if(type==='admin'&&P.home==='tarraco'){ P.store.gold+=3; logm(G,P.name+': 타라코 — 금 3'); }
+ if(type==='admin'&&P.home==='tarraco'){ P.store.gold+=3; fxAdd(P,'n',3); logm(G,P.name+': 타라코 — 금 3'); }
  G.queue[i]=mkAct(t.p,type); }
-function skipForRes(G,t){ const i=G.queue.indexOf(t); G.queue[i]={type:'resChoice',p:t.p,n:3,txt:'코린토스: 행동을 포기하고 자원 3개 (한 종류)'}; }
+function skipForRes(G,t){ fxAdd(G.players[t.p],'n'); const i=G.queue.indexOf(t); G.queue[i]={type:'resChoice',p:t.p,n:3,txt:'코린토스: 행동을 포기하고 자원 3개 (한 종류)'}; }
 function startAdmin(G,t,action){
  if(!G.players[t.p].ai)hlRec(G,G.players[t.p],'adm',action);
  const i=G.queue.indexOf(t); G.queue.splice(i,1,mkAct(t.p,action),{type:'drop',p:t.p,src:5});
@@ -1265,7 +1266,7 @@ function resolveEvent(G,sec){
  G.players.forEach((P,i)=>{
   if(all||cs[i]===mx){ redeem(G,P); if(P.supp==='quintilianus'){ const n=(topN===1&&!all)?2:1; P.qCubes+=n; logm(G,P.name+': 퀸틸리아누스 큐브 +'+n); } }
   else if(cs[i]===mn){ P.dis++; logm(G,P.name+': 최하위 — 불명예 큐브 +1'); }
-  if(P.home==='cyrene'){ const ic=gameIcons(P),w=3*Math.min(ic.man,ic.woman); if(w){P.store.wheat+=w; logm(G,P.name+': 키레네 — 밀 '+w);} }
+  if(P.home==='cyrene'){ const ic=gameIcons(P),w=3*Math.min(ic.man,ic.woman); if(w){P.store.wheat+=w; fxAdd(P,'n',w); logm(G,P.name+': 키레네 — 밀 '+w);} }
   if(P.treasure){ P.store.gold+=P.treasure; }
   if(P.supp==='hadrianus'&&P.amp>0)G.queue.push({type:'hadr',p:P.id});
  });
@@ -1945,10 +1946,22 @@ function endCard(){
  h+=`<div class="er rmr"><span class="el" style="flex:none">남은 수</span>${r}</div>`;
  return `<section class="card endcard"><h2>종료 조건 <small class="k">${G.endFlag?'⚑ 달성! 이번 라운드까지':'하나라도 달성되면 그 라운드까지'}</small></h2>${h}</section>`;
 }
+function fxBadge(P,kind){
+ const f=P.fx||{},n=f.n||0,x=f.s||0; let t='';
+ if(kind==='h'){ switch(P.home){
+  case 'ephesus':t='자원 +'+n; break; case 'corinthus':t='자원 3 × '+n+'회'; break; case 'puteoli':t='추가 생산 '+n+'회'; break; case 'simitthus':t='자원 4 × '+n+'회'; break;
+  case 'tarraco':t='금 +'+n; break; case 'cyrene':t='밀 +'+n; break; case 'misenum':t='자원 +'+n; break; case 'antiochia':t='사용 '+P.antUsed.filter(Boolean).length+'/4'; break; case 'petra':t='2배 '+n+'회'; break; }
+ } else { switch(P.supp){
+  case 'quintilianus':t='🧊 ×'+P.qCubes; break; case 'lucius':t='🧊 ×'+P.lqCubes; break; case 'cornelius':t='🧊 ×'+P.cqCubes; break;
+  case 'hadrianus':t='🏺 ×'+P.hadAmp; break; case 'acilius':t='발동 '+x+'회'; break; case 'tacitus':t='불명예 해소 '+x+'회 · 명예 카드 '+P.honors.length; break;
+  case 'havitius':t='군단병 '+P.leg+(P.leg>=5?' ✓':'/5'); break;
+  case 'trajanus':t=(P.trajTile?'타일 「'+P.trajTile.txt+'」 · ':'타일 없음 · ')+'큐브 '+P.trajPos+'/4'; break; } }
+ return t?` <b class="cubeN" data-tip="발동 현황">${esc(t)}</b>`:'';
+}
 function idBox(P){
  if(!G.pir)return '';
  const h=HOME_DEF.find(x=>x.id===P.home),sp=SUPP_DEF.find(x=>x.id===P.supp); if(!h&&!sp)return '';
- return `<div class="idbox">${h?`<div class="idl" data-tip="${esc(h.txt)}" tabindex="0"><b>${HIC[h.id]||'🏠'}</b> <span><em>출생지</em> ${esc(h.name)}</span><small>${esc(h.txt)}</small></div>`:''}${sp?`<div class="idl" data-tip="${esc(sp.txt)}" tabindex="0"><b>${SIC[sp.id]||'🎩'}</b> <span><em>후원자</em> ${esc(sp.name)}${(()=>{const n=P.qCubes||P.lqCubes||P.cqCubes||0;return (P.supp==='quintilianus'||P.supp==='lucius'||P.supp==='cornelius')?` <b class="cubeN" data-tip="올라간 큐브">🧊 ×${n}</b>`:''})()}</span><small>${esc(sp.txt)}</small></div>`:''}</div>`;
+ return `<div class="idbox">${h?`<div class="idl" data-tip="${esc(h.txt)}" tabindex="0"><b>${HIC[h.id]||'🏠'}</b> <span><em>출생지</em> ${esc(h.name)}${fxBadge(P,'h')}</span><small>${esc(h.txt)}</small></div>`:''}${sp?`<div class="idl" data-tip="${esc(sp.txt)}" tabindex="0"><b>${SIC[sp.id]||'🎩'}</b> <span><em>후원자</em> ${esc(sp.name)}${fxBadge(P,'s')}</span><small>${esc(sp.txt)}</small></div>`:''}</div>`;
 }
 function barracks(P){
  const h=HOME_DEF.find(x=>x.id===P.home),s=SUPP_DEF.find(x=>x.id===P.supp),lc=legCost(P),lv=P.leg?LEG_VP[P.leg-1]:0;
